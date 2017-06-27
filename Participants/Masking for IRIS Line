@@ -1,0 +1,37 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jun 27 20:35:33 2017
+
+@author: Saurabh
+"""
+
+import cv2
+import numpy as np
+
+img = cv2.imread('15907-18.jpg')
+frame = img
+hsv=cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+#   cv2.imshow('hsv',hsv)
+lower_red=np.array([160 ,50,50])
+upper_red=np.array([180,255,255])
+
+mask=cv2.inRange(hsv,lower_red,upper_red)
+res=cv2.bitwise_and(frame,frame,mask=mask)
+kernel=np.ones((20,3),np.uint8)
+erosion=cv2.erode(mask,kernel,iterations=10)
+#dialtion=cv2.dilate(mask,kernel,iterations=1)
+#opening=cv2.morphologyEx(mask,cv2.MORPH_OPEN,kernel)
+#closing=cv2.morphologyEx(mask,cv2.MORPH_CLOSE,kernel)
+
+cv2.namedWindow('res',cv2.WINDOW_NORMAL)
+
+#cv2.imshow('erosion',erosion)
+#cv2.imshow('dialtion',dialtion)
+
+cv2.imshow('res',res)
+#cv2.imshow('opening',opening)
+#cv2.imshow('closing',closing)
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+#cap.release()
