@@ -1,0 +1,68 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jun 29 18:32:13 2017
+
+@author: Saurabh
+"""
+
+import numpy as np
+import cv2
+
+from sklearn.cluster import DBSCAN
+from sklearn import metrics
+from sklearn.datasets.samples_generator import make_blobs
+from sklearn.preprocessing import StandardScaler
+
+#create(4000, 4000, CV_8UC1);
+#src = cv2.imread('15811-23.jpg', CV_8UC1);
+img = cv2.imread('16031-21.jpg',0)
+#img1 = cv2.imread('check.jpg',0)
+
+equ = cv2.equalizeHist(img)
+
+y = len(equ[0])
+x = len(equ)
+pt1 = [int(x/4),int(y/4)]
+pt4 = [int(3*x/4),int(3*y/4)]
+pt2 = [int(3*x/4),int(x/4)]
+pt3 = [int(x/4),int(3*x)/4]
+
+#cv2.rectangle(equ,)
+crop_img = img[int(x/4):int(3*x/4), int(y/4):int(3*y/4)]
+#ret, otsu = cv2.threshold(crop_img,240,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
+th3 = cv2.adaptiveThreshold(crop_img,255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,\
+        cv2.THRESH_BINARY,15,5)
+th4 = cv2.adaptiveThreshold(crop_img,255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,\
+        cv2.THRESH_BINARY,13,5)
+kernel = np.ones((1,1),np.uint8)
+
+opening = cv2.morphologyEx(th3, cv2.MORPH_OPEN, kernel)
+try1 = cv2.subtract(th3,th4)
+try2 = cv2.subtract(th3,try1)
+#median = cv2.medianBlur(try2,5)
+#b = DBSCAN(eps=0.3, min_samples=10).fit(try2)
+
+z = np.float32(try2)
+
+criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+
+# Set flags (Just to avoid line break in the code)
+flags = cv2.KMEANS_RANDOM_CENTERS
+
+# Apply KMeans
+compactness,labels,centers = cv2.kmeans(z,2,None,criteria,10,flags)
+
+opening = cv2.morphologyEx(try2, cv2.MORPH_OPEN, kernel)
+
+centers = np.uint8(centers)
+res = centers[labels.flatten()]
+
+#edge = cv2.Canny(th3,00,200)
+#cv2.namedWindow('edge',cv2.WINDOW_NORMAL)
+#cv2.imshow('asd',th3)
+#cv2.imshow('asd1',th4)
+#cv2.imshow('edge',opening)
+#print type(b)
+cv2.imshow('edge',res)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
