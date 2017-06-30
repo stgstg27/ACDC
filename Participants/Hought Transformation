@@ -1,0 +1,75 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Jun 30 02:54:16 2017
+
+@author: Saurabh
+"""
+import numpy as np
+import cv2
+img = cv2.imread('16031-21.jpg',0)
+#img1 = cv2.imread('check.jpg',0)
+
+equ = cv2.equalizeHist(img)
+
+y = len(equ[0])
+x = len(equ)
+pt1 = [int(x/4),int(y/4)]
+pt4 = [int(3*x/4),int(3*y/4)]
+pt2 = [int(3*x/4),int(x/4)]
+pt3 = [int(x/4),int(3*x)/4]
+
+
+
+    
+    
+crop_img = img[int(x/4):int(3*x/4), int(y/4):int(3*y/4)]
+#ret, otsu = cv2.threshold(crop_img,240,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
+th3 = cv2.adaptiveThreshold(crop_img,255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,\
+        cv2.THRESH_BINARY_INV,21,5)
+th4 = cv2.adaptiveThreshold(crop_img,255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,\
+        cv2.THRESH_BINARY_INV,19,5)
+        
+        
+try1 = cv2.subtract(th3,th4)
+try2 = cv2.subtract(th3,try1)
+median = cv2.medianBlur(try2,5)
+
+kernel = np.ones((10,1),np.uint8)
+losing = cv2.morphologyEx(median, cv2.MORPH_CLOSE, kernel)
+#cv2.imshow('losing',losing)
+edges = cv2.Canny(losing,0,255,apertureSize=5)
+#
+dilation = cv2.dilate(edges,kernel,iterations = 5)
+cv2.imshow('losing',dilation)
+crux = cv2.cvtColor(dilation,cv2.COLOR_GRAY2BGR)
+
+
+lines = cv2.HoughLines(dilation,10,np.pi/360,20)
+print lines
+for i in range(35):
+    for rho,theta in lines[i]:
+        a = np.cos(theta)
+        b = np.sin(theta)
+        x0 = a*rho
+        y0 = b*rho
+        x1 = int(x0 + 1000*(-b))
+        y1 = int(y0 + 1000*(a))
+        x2 = int(x0 - 1000*(-b))
+        y2 = int(y0 - 1000*(a))
+        #if(theta==np.pi/2):
+        cv2.line(crux,(x1,y1),(x2,y2),(0,0,255),2)
+
+"""
+minLineLength = 0
+maxLineGap = 10
+lines = cv2.HoughLinesP(edges,1,np.pi/180,100,minLineLength,maxLineGap)
+print lines
+for i in range(len(lines)):
+    for x1,y1,x2,y2 in lines[i]:
+        cv2.line(crux,(x1,y1),(x2,y2),(0,0,255),2)
+    
+"""
+cv2.imshow('edge',crux)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
