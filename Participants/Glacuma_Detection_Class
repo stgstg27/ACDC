@@ -1,0 +1,134 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Jun 30 17:32:39 2017
+
+@author: Saurabh
+"""
+
+"""Import  Libraries"""
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+
+
+class Line_Detection():
+    
+    
+    
+    def   __init__(self):
+        self.xlist=list()#List Of SC Values
+        self.ylist=list()#List Of CA Values
+        self.rlist = list()#List of Ratio
+        self.image_Pro()
+        
+    """    Bubble Sort   """
+    """  Sorting the Contours on the basis of their SIze   """  
+    
+    def bubbleSort(self,alist):
+        for passnum in range(len(alist)-1,0,-1):
+            for i in range(passnum):
+                if cv2.contourArea(alist[i])>cv2.contourArea(alist[i+1]):
+                    temp = alist[i]
+                    alist[i] = alist[i+1]
+                    alist[i+1] = temp
+        return alist
+        
+    def image_Pro(self):
+        """   Loop for Using images for the database   """
+        for i in range(1,7):
+            temp  = str(i)
+            print temp
+            temp_str = '\New folder ('
+            temp_str= temp_str+temp
+            #temp_str= temp_str + ")\"
+            temp_str = temp_str+temp
+            temp_str=temp_str+'.jpg'
+            temp_img = temp+'.jpg'
+            
+            print temp_str
+            """ Taking the Image from DataBase """
+            
+            img = cv2.imread(temp_img,0)
+            
+            equ = cv2.equalizeHist(img)
+            
+            """ The Code following is getting ROI """
+            
+            #User will be asked to click the pic when it the ROI in rectangle frame
+            
+            y = len(equ[0])
+            x = len(equ)
+            
+            """ Image being Cropped to ROI """
+            crop_img = img[int(x/4):int(3*x/4), int(y/4):int(3*y/4)]#Image Cropped so that further work will be done on ROI
+            img=crop_img
+            
+            
+            """Figuring out the area of illumination appplying OTSU's Binarization """
+            
+            ret3,th3 = cv2.threshold(crop_img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+            
+            """ Making Contours on Binary Image """
+            im,contours,hierarchy = cv2.findContours(th3,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+            
+            new_contour = self.bubbleSort(contours)
+              
+            """   Creating 2 Largest Contour on Graph   """  
+            img1 = cv2.drawContours(th3, new_contour,len(new_contour)-1, (255,255,255), 5)
+            img2 = cv2.drawContours(th3, new_contour,len(new_contour)-2, (255,255,255), 5)
+            final_im = cv2.add(img1,img2)
+            cv2.imshow('final_im',final_im)
+        
+            height,width = final_im.shape # Shape of image
+            
+            points = list()#List of Points of Interest
+        
+            for i in range(width):
+                temp = str(final_im[2,i])
+            
+                if(len(points)==0):
+                    if(final_im[2,i]==255):
+                        points.append(i)
+                        continue
+                if(len(points)==1):
+                    if(final_im[2,i]==0):
+                        points.append(i)
+                        continue
+                if(len(points)==2):
+                    if(final_im[2,i]==255):
+                        points.append(i)
+                        continue    
+                    
+                    
+                   
+            print points        
+            
+            """Calculating SC and CA from the code """            
+            
+            sc = points[1]-points[0]
+            ca = points[2]-points[1]
+            self.xlist.append(sc)
+            self.ylist.append(ca)
+            ratio = sc/ca
+            self.rlist.append(ratio)
+            
+            #temp = temp + 'k'
+            """ Storing the Image """
+            temp=temp+temp
+            temp = temp + '.jpg'
+            cv2.imwrite(temp_img,th3)
+        
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+            
+        """   Ploting the Value woth different Pictures """
+        plt.plot(self.xlist,self.ylist)
+        
+        plt.xlabel('SC')
+        plt.ylabel('CA')
+        
+        plt.savefig('books_read.png')
+        
+
+""" Calling Object """       
+yolo = Line_Detection()       
